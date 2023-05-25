@@ -1,0 +1,59 @@
+stages:
+  - style
+  - build
+  - test
+  - deploy
+
+codestyle:
+  stage: style
+  tags:
+    - style
+  script:
+    - cd src/cat_grep/cat
+    - make check
+    - cd ../grep
+    - make check
+  when: on_success
+  after_script:
+    - sh src/test.sh "test"
+    
+building:
+  stage: build
+  tags: 
+    - build
+  script:
+    - cd src/cat_grep/cat
+    - make all
+    - cd ../grep
+    - make all
+  artifacts:
+    paths:
+      - src/cat_grep/cat/s21_cat
+      - src/cat_grep/grep/s21_grep
+    expire_in: 30 days
+  when: on_success
+  after_script:
+    - sh src/test.sh "test"
+
+test_code:
+  stage: test
+  tags:
+    - test
+  script:
+    - cd src/cat_grep/cat
+    - make test 
+    - cd ../grep
+    - make test
+  when: on_success
+  after_script:
+    - sh src/test.sh "test"
+
+deploy:
+  stage: deploy
+  tags:
+    - deploy
+  script:
+    - bash src/mv.sh
+  when: manual
+  after_script:
+    - sh src/test.sh
